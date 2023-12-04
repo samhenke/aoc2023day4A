@@ -22,7 +22,35 @@
  *)
 
 open Base
+open Stdio
 
+module Int_set = Stdlib.Set.Make(Int)
+
+let parse_ints str =
+    String.split ~on:' ' str
+    |> List.filter_map ~f:Int.of_string_opt
+    |> Int_set.of_list
+
+let parse_game line =
+    let game, numbers =
+        match String.split ~on:':' line with
+        | [game; numbers] -> game, numbers
+        | _ -> assert false
+    in
+    let game_number = Stdlib.Scanf.sscanf game "Card %u" (fun x -> x) in
+    match String.split ~on:'|' numbers with
+    | [winning_numbers; card_numbers] ->
+            game_number, parse_ints winning_numbers, parse_ints card_numbers
+    | _ -> assert false
+
+let points (_, winning_numbers, card_numbers) =
+    Int_set.inter winning_numbers card_numbers
+    |> Int_set.cardinal
+    |> fun x -> if x = 0 then 0 else 1 lsl (x - 1)
 
 let () =
-    Stdlib.print_endline "Hello, World!"
+    In_channel.fold_lines In_channel.stdin ~init:0 ~f:(fun acc line ->
+        parse_game line
+        |> points
+        |> (+) acc)
+    |> printf "Points:\t%u\n"
