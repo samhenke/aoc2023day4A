@@ -24,12 +24,10 @@
 open Base
 open Stdio
 
-module Int_set = Stdlib.Set.Make(Int)
-
 let parse_ints str =
     String.split ~on:' ' str
     |> List.filter_map ~f:Int.of_string_opt
-    |> Int_set.of_list
+    |> Set.of_list (module Int)
 
 let parse_game line =
     let game, numbers =
@@ -44,8 +42,8 @@ let parse_game line =
     | _ -> assert false
 
 let points (_, winning_numbers, card_numbers) =
-    Int_set.inter winning_numbers card_numbers
-    |> Int_set.cardinal
+    Set.inter winning_numbers card_numbers
+    |> Set.length
     |> fun x -> if x = 0 then 0 else 1 lsl (x - 1)
 
 let () =
